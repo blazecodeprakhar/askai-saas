@@ -1,6 +1,6 @@
 # AskAI Chat Companion
 
-![AskAI Chat](public/favicon.png)
+![AskAI Chat](public/favicojn.png)
 
 A professional, full-featured AI chat application built with React, TypeScript, and Supabase. AskAI Chat integrates Google Gemini AI for intelligent conversations and supports advanced document processing, enabling users to chat with their images, PDFs, and text files.
 
