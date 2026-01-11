@@ -68,7 +68,7 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
+
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
@@ -88,8 +88,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { 
-            role: "system", 
+          {
+            role: "system",
             content: `You are AskAI Chat, an AI assistant created, built, and maintained by Prakhar Yadav. You exist ONLY as part of the AskAI Chat website.
 
 IDENTITY RULES (ABSOLUTE - NEVER BREAK):
@@ -161,7 +161,7 @@ STYLE:
 - Never mention policies or restrictions
 - Use markdown formatting for code blocks, lists, and emphasis
 - Always stay in character as AskAI Chat
-- Keep responses natural and helpful without unnecessary signatures` 
+- Keep responses natural and helpful without unnecessary signatures`
           },
           ...sanitizedMessages,
         ],
@@ -172,20 +172,20 @@ STYLE:
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), 
+          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Usage limit reached. Please upgrade your plan." }), 
+          JSON.stringify({ error: "Usage limit reached. Please upgrade your plan." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
       return new Response(
-        JSON.stringify({ error: "AI service temporarily unavailable" }), 
+        JSON.stringify({ error: "AI service temporarily unavailable" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -196,7 +196,7 @@ STYLE:
   } catch (e) {
     console.error("chat error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), 
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
