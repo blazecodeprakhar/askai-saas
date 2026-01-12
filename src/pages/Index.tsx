@@ -165,14 +165,20 @@ const Index = () => {
 
   // Sync guest messages to display messages when not logged in
   useEffect(() => {
-    if (!user && guestMessages.length > 0) {
-      const displayMessages: Message[] = guestMessages.map(msg => ({
-        id: msg.id,
-        role: msg.role === 'user' ? 'user' : 'ai',
-        content: msg.content,
-        timestamp: msg.timestamp,
-      }));
-      setMessages(displayMessages);
+    if (!user) {
+      if (guestMessages.length > 0) {
+        const displayMessages: Message[] = guestMessages.map(msg => ({
+          id: msg.id,
+          role: msg.role === 'user' ? 'user' : 'ai',
+          content: msg.content,
+          timestamp: msg.timestamp,
+        }));
+        setMessages(displayMessages);
+      } else {
+        // Clear messages if no guest history
+        setMessages([]);
+        setCurrentConversationId(null);
+      }
     }
   }, [user, guestMessages]);
 

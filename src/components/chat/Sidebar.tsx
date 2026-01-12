@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, MessageSquare, Settings, Trash2, Sun, Moon, LogOut, LogIn, Search, PanelLeftClose, PanelLeft, Info, Database, Loader2, Calendar, TrendingUp, Clock, Pencil, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
@@ -45,12 +46,12 @@ interface SidebarProps {
 // Free tier storage limit in KB (10 MB for demo)
 const STORAGE_LIMIT_KB = 10 * 1024;
 
-const Sidebar = ({ 
-  isOpen, 
-  onToggle, 
-  onNewChat, 
-  isDarkMode, 
-  onThemeToggle, 
+const Sidebar = ({
+  isOpen,
+  onToggle,
+  onNewChat,
+  isDarkMode,
+  onThemeToggle,
   onDeleteAllChats,
   conversations,
   groupedConversations,
@@ -68,6 +69,7 @@ const Sidebar = ({
   const editInputRef = useRef<HTMLInputElement>(null);
   const { user, profile, signOut } = useAuth();
   const { stats, isLoading: statsLoading, fetchStats, formatStorage } = useStorageStats();
+  const navigate = useNavigate();
 
   // Helper to close settings with animation
   const closeSettings = () => {
@@ -105,13 +107,13 @@ const Sidebar = ({
   // Escape key to close settings
   useEffect(() => {
     if (!showSettings) return;
-    
+
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         closeSettings();
       }
     };
-    
+
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [showSettings]);
@@ -121,10 +123,10 @@ const Sidebar = ({
   // Filter conversations based on search query
   const filteredGroupedConversations = useMemo(() => {
     if (!searchQuery.trim()) return groupedConversations;
-    
+
     const filtered: Record<string, Conversation[]> = {};
     Object.entries(groupedConversations).forEach(([period, convs]) => {
-      const matching = convs.filter(c => 
+      const matching = convs.filter(c =>
         c.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
       if (matching.length > 0) {
@@ -135,9 +137,14 @@ const Sidebar = ({
   }, [groupedConversations, searchQuery]);
 
   const handleLogout = async () => {
-    await signOut();
-    setShowSettings(false);
-    window.location.reload();
+    try {
+      await signOut();
+      setShowSettings(false);
+      toast.success("Logged out successfully");
+      navigate('/auth');
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
   };
 
   const handleDeleteAllChats = () => {
@@ -164,7 +171,7 @@ const Sidebar = ({
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
           onClick={onToggle}
         />
@@ -345,224 +352,224 @@ const Sidebar = ({
             {/* Settings Menu */}
             {showSettings && (
               <>
-                <div 
+                <div
                   onClick={closeSettings}
                   className={cn(
                     "fixed inset-0 bg-background/40 backdrop-blur-sm z-40 cursor-pointer",
                     settingsClosing ? "animate-fade-out" : "animate-fade-in"
                   )}
                 />
-                <div 
-                  data-settings-menu 
+                <div
+                  data-settings-menu
                   className={cn(
                     "absolute bottom-full left-3 right-3 mb-2 bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-2xl overflow-hidden z-50",
                     settingsClosing ? "animate-slide-down" : "animate-slide-up"
                   )}
                 >
-                <div className="p-2 space-y-1">
-                  <button
-                    onClick={() => {
-                      onThemeToggle();
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
-                  >
-                    {isDarkMode ? (
-                      <Sun className="w-5 h-5" />
-                    ) : (
-                      <Moon className="w-5 h-5" />
-                    )}
-                    <span className="text-sm">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                  </button>
-
-                  <Dialog open={dataControlsOpen} onOpenChange={setDataControlsOpen}>
-                    <DialogTrigger asChild>
-                      <button
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
-                      >
-                        <Database className="w-5 h-5" />
-                        <span className="text-sm">Data Controls</span>
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-sm">
-                      <DialogHeader className="pb-2">
-                        <DialogTitle className="text-base flex items-center gap-2">
-                          Data Controls
-                          {statsLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-                        </DialogTitle>
-                        <DialogDescription className="text-xs">
-                          Manage your storage and chat data
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-3 py-2">
-                        {isGuest ? (
-                          <div className="text-center py-4">
-                            <Database className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
-                            <p className="text-xs text-muted-foreground">
-                              Sign in to track your storage usage
-                            </p>
-                          </div>
-                        ) : (
-                          <>
-                            {/* Storage Usage */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-medium text-foreground">Storage</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {formatStorage(stats.estimatedStorageKB)} / {formatStorage(STORAGE_LIMIT_KB)}
-                                </span>
-                              </div>
-                              <Progress value={usagePercent} className="h-2" />
-                            </div>
-
-                            {/* Statistics */}
-                            <div className="rounded-lg border border-border p-3 space-y-2">
-                              <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                                <TrendingUp className="w-3 h-3" />
-                                Statistics
-                              </h4>
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Chats</span>
-                                  <span className="font-medium">{stats.totalConversations}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Messages</span>
-                                  <span className="font-medium">{stats.totalMessages}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Yours</span>
-                                  <span className="font-medium">{stats.userMessages}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">AI</span>
-                                  <span className="font-medium">{stats.assistantMessages}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Avg/Chat</span>
-                                  <span className="font-medium">{stats.averageMessagesPerChat}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Avg Length</span>
-                                  <span className="font-medium">{stats.averageMessageLength}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Activity Timeline */}
-                            <div className="rounded-lg border border-border p-3 space-y-2">
-                              <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                                <Calendar className="w-3 h-3" />
-                                Activity
-                              </h4>
-                              <div className="space-y-1.5 text-xs">
-                                {stats.accountCreatedAt && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Member since</span>
-                                    <span className="font-medium">
-                                      {new Date(stats.accountCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                                    </span>
-                                  </div>
-                                )}
-                                {stats.oldestConversation && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">First chat</span>
-                                    <span className="font-medium">
-                                      {new Date(stats.oldestConversation).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                    </span>
-                                  </div>
-                                )}
-                                {stats.newestConversation && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Last chat</span>
-                                    <span className="font-medium">
-                                      {new Date(stats.newestConversation).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                    </span>
-                                  </div>
-                                )}
-                                {stats.totalTokensUsed > 0 && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Tokens used</span>
-                                    <span className="font-medium">{stats.totalTokensUsed.toLocaleString()}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Delete All Chats - Danger Zone */}
-                            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2.5">
-                              <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
-                                <h4 className="text-xs font-semibold text-destructive">Danger Zone</h4>
-                              </div>
-                              <p className="text-xs text-muted-foreground leading-relaxed">
-                                Permanently delete all conversations and messages.
-                              </p>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-destructive/10 border border-destructive/40 text-destructive font-medium text-xs cursor-pointer transition-all duration-200 ease-in-out hover:bg-red-600 hover:text-white hover:border-red-600 hover:shadow-md hover:shadow-red-600/25 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-background">
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete All Chats
-                                  </button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent className="sm:max-w-sm">
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-base flex items-center gap-2">
-                                      <Trash2 className="w-4 h-4 text-destructive" />
-                                      Delete all chats?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription className="text-xs">
-                                      This will permanently delete all your chat history. This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter className="gap-2 sm:gap-2">
-                                    <AlertDialogCancel className="text-xs h-9 px-4">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={handleDeleteAllChats}
-                                      className="bg-destructive text-white hover:bg-red-600 text-xs h-9 px-4 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-md hover:shadow-destructive/25 active:scale-[0.98] focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2"
-                                    >
-                                      Delete All
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Link
-                    to="/about"
-                    onClick={() => setShowSettings(false)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
-                  >
-                    <Info className="w-5 h-5" />
-                    <span className="text-sm">About</span>
-                  </Link>
-
-                  <div className="border-t border-border my-1" />
-
-                  {isGuest ? (
-                    <Link
-                      to="/auth"
-                      onClick={() => setShowSettings(false)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200"
-                    >
-                      <LogIn className="w-5 h-5" />
-                      <span className="text-sm">Sign In / Sign Up</span>
-                    </Link>
-                  ) : (
+                  <div className="p-2 space-y-1">
                     <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+                      onClick={() => {
+                        onThemeToggle();
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
                     >
-                      <LogOut className="w-5 h-5" />
-                      <span className="text-sm">Logout</span>
+                      {isDarkMode ? (
+                        <Sun className="w-5 h-5" />
+                      ) : (
+                        <Moon className="w-5 h-5" />
+                      )}
+                      <span className="text-sm">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                     </button>
-                  )}
+
+                    <Dialog open={dataControlsOpen} onOpenChange={setDataControlsOpen}>
+                      <DialogTrigger asChild>
+                        <button
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+                        >
+                          <Database className="w-5 h-5" />
+                          <span className="text-sm">Data Controls</span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-sm">
+                        <DialogHeader className="pb-2">
+                          <DialogTitle className="text-base flex items-center gap-2">
+                            Data Controls
+                            {statsLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                          </DialogTitle>
+                          <DialogDescription className="text-xs">
+                            Manage your storage and chat data
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-3 py-2">
+                          {isGuest ? (
+                            <div className="text-center py-4">
+                              <Database className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+                              <p className="text-xs text-muted-foreground">
+                                Sign in to track your storage usage
+                              </p>
+                            </div>
+                          ) : (
+                            <>
+                              {/* Storage Usage */}
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-medium text-foreground">Storage</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatStorage(stats.estimatedStorageKB)} / {formatStorage(STORAGE_LIMIT_KB)}
+                                  </span>
+                                </div>
+                                <Progress value={usagePercent} className="h-2" />
+                              </div>
+
+                              {/* Statistics */}
+                              <div className="rounded-lg border border-border p-3 space-y-2">
+                                <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                                  <TrendingUp className="w-3 h-3" />
+                                  Statistics
+                                </h4>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Chats</span>
+                                    <span className="font-medium">{stats.totalConversations}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Messages</span>
+                                    <span className="font-medium">{stats.totalMessages}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Yours</span>
+                                    <span className="font-medium">{stats.userMessages}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">AI</span>
+                                    <span className="font-medium">{stats.assistantMessages}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Avg/Chat</span>
+                                    <span className="font-medium">{stats.averageMessagesPerChat}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Avg Length</span>
+                                    <span className="font-medium">{stats.averageMessageLength}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Activity Timeline */}
+                              <div className="rounded-lg border border-border p-3 space-y-2">
+                                <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                                  <Calendar className="w-3 h-3" />
+                                  Activity
+                                </h4>
+                                <div className="space-y-1.5 text-xs">
+                                  {stats.accountCreatedAt && (
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Member since</span>
+                                      <span className="font-medium">
+                                        {new Date(stats.accountCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {stats.oldestConversation && (
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">First chat</span>
+                                      <span className="font-medium">
+                                        {new Date(stats.oldestConversation).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {stats.newestConversation && (
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Last chat</span>
+                                      <span className="font-medium">
+                                        {new Date(stats.newestConversation).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {stats.totalTokensUsed > 0 && (
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Tokens used</span>
+                                      <span className="font-medium">{stats.totalTokensUsed.toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Delete All Chats - Danger Zone */}
+                              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2.5">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+                                  <h4 className="text-xs font-semibold text-destructive">Danger Zone</h4>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                  Permanently delete all conversations and messages.
+                                </p>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-destructive/10 border border-destructive/40 text-destructive font-medium text-xs cursor-pointer transition-all duration-200 ease-in-out hover:bg-red-600 hover:text-white hover:border-red-600 hover:shadow-md hover:shadow-red-600/25 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-background">
+                                      <Trash2 className="w-4 h-4" />
+                                      Delete All Chats
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="sm:max-w-sm">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle className="text-base flex items-center gap-2">
+                                        <Trash2 className="w-4 h-4 text-destructive" />
+                                        Delete all chats?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription className="text-xs">
+                                        This will permanently delete all your chat history. This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter className="gap-2 sm:gap-2">
+                                      <AlertDialogCancel className="text-xs h-9 px-4">Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={handleDeleteAllChats}
+                                        className="bg-destructive text-white hover:bg-red-600 text-xs h-9 px-4 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-md hover:shadow-destructive/25 active:scale-[0.98] focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2"
+                                      >
+                                        Delete All
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
+                    <Link
+                      to="/about"
+                      onClick={() => setShowSettings(false)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+                    >
+                      <Info className="w-5 h-5" />
+                      <span className="text-sm">About</span>
+                    </Link>
+
+                    <div className="border-t border-border my-1" />
+
+                    {isGuest ? (
+                      <Link
+                        to="/auth"
+                        onClick={() => setShowSettings(false)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200"
+                      >
+                        <LogIn className="w-5 h-5" />
+                        <span className="text-sm">Sign In / Sign Up</span>
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span className="text-sm">Logout</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
               </>
             )}
 

@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           // Use setTimeout to avoid potential deadlock with Supabase client
           setTimeout(() => fetchProfile(session.user.id), 0);
@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     });
-    
+
     // Update the profile with the name after signup
     if (!error && data.user && name) {
       await supabase
@@ -112,12 +112,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .update({ display_name: name })
         .eq('user_id', data.user.id);
     }
-    
+
     // Send signup alert
     if (!error && data.user) {
       sendAuthAlert('signup', email, name);
     }
-    
+
     return { error };
   };
 
@@ -126,7 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
     });
-    
+
     // Send login alert with name from database
     if (!error && data.user) {
       // Fetch user's name from profiles table
@@ -135,17 +135,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .select('display_name')
         .eq('user_id', data.user.id)
         .maybeSingle();
-      
+
       const userName = profileData?.display_name || email.split('@')[0];
       sendAuthAlert('login', email, userName);
     }
-    
+
     return { error };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setProfile(null);
+      setUser(null);
+      setSession(null);
+    }
   };
 
   return (
