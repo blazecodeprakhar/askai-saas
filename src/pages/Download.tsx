@@ -9,8 +9,8 @@ const DownloadPage = () => {
         setDownloading(true);
         // Create a link to download the APK
         const link = document.createElement('a');
-        link.href = '/AskAI Chat_1_1.0.apk';
-        link.download = 'AskAI Chat_1_1.0.apk';
+        link.href = '/AskAI Chat_1_1.2.apk';
+        link.download = 'AskAI Chat_1_1.2.apk';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -58,7 +58,7 @@ const DownloadPage = () => {
                         className="group relative inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
                         <Download className={`w-6 h-6 ${downloading ? 'animate-bounce' : 'group-hover:animate-bounce'}`} />
-                        {downloading ? 'Starting Download...' : 'Download APK (v1.0)'}
+                        {downloading ? 'Starting Download...' : 'Download APK (v1.2)'}
                     </button>
                 </div>
 
@@ -124,7 +124,7 @@ const DownloadPage = () => {
                             <div className="flex-1">
                                 <h3 className="font-semibold text-foreground mb-2">Open the Downloaded File</h3>
                                 <p className="text-sm text-muted-foreground mb-2">
-                                    Tap on the download notification or go to your <span className="font-medium text-foreground">Downloads folder</span> and tap on <span className="font-medium text-foreground">"AskAI Chat_1_1.0.apk"</span>.
+                                    Tap on the download notification or go to your <span className="font-medium text-foreground">Downloads folder</span> and tap on <span className="font-medium text-foreground">"AskAI Chat_1_1.2.apk"</span>.
                                 </p>
                             </div>
                         </div>
@@ -273,11 +273,11 @@ const DownloadPage = () => {
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li className="flex justify-between">
                                 <span>Version:</span>
-                                <span className="font-medium text-foreground">1.0</span>
+                                <span className="font-medium text-foreground">1.2</span>
                             </li>
                             <li className="flex justify-between">
                                 <span>Size:</span>
-                                <span className="font-medium text-foreground">~15 MB</span>
+                                <span className="font-medium text-foreground">~2.5 MB</span>
                             </li>
                             <li className="flex justify-between">
                                 <span>Last Updated:</span>
