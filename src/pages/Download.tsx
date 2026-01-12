@@ -99,60 +99,128 @@ const DownloadPage = () => {
                 <div className="bg-card border border-border rounded-2xl p-8 mb-8">
                     <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                         <CheckCircle2 className="w-6 h-6 text-primary" />
-                        Installation Guide
+                        Step-by-Step Installation Guide
                     </h2>
 
                     <div className="space-y-6">
+                        {/* Step 1 */}
                         <div className="flex gap-4">
                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                                 1
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-foreground mb-2">Download the APK</h3>
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-foreground mb-2">Download the APK File</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    Click the download button above to download the AskAI Chat APK file to your device.
+                                    Click the <span className="font-medium text-primary">"Download APK"</span> button above. The file will be saved to your device's Downloads folder.
                                 </p>
                             </div>
                         </div>
 
+                        {/* Step 2 */}
                         <div className="flex gap-4">
                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                                 2
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-foreground mb-2">Enable Unknown Sources</h3>
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-foreground mb-2">Open the Downloaded File</h3>
                                 <p className="text-sm text-muted-foreground mb-2">
-                                    Go to <span className="font-medium text-foreground">Settings → Security → Install unknown apps</span> and enable installation from your browser or file manager.
-                                </p>
-                                <p className="text-xs text-muted-foreground italic">
-                                    Note: This setting may vary depending on your Android version.
+                                    Tap on the download notification or go to your <span className="font-medium text-foreground">Downloads folder</span> and tap on <span className="font-medium text-foreground">"AskAI Chat_1_1.0.apk"</span>.
                                 </p>
                             </div>
                         </div>
 
+                        {/* Step 3 */}
                         <div className="flex gap-4">
                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                                 3
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-foreground mb-2">Install the App</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Open the downloaded APK file from your notifications or file manager and tap "Install".
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-foreground mb-2">Google Play Protect Scan</h3>
+                                <p className="text-sm text-muted-foreground mb-3">
+                                    You'll see a screen saying <span className="font-medium text-foreground">"App scan recommended"</span>. This is normal for apps not from the Play Store.
                                 </p>
+                                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                                    <p className="text-xs text-muted-foreground">
+                                        <span className="font-medium text-foreground">Option 1:</span> Tap <span className="font-medium text-green-600">"Scan app"</span> and wait for the scan to complete (recommended).
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        <span className="font-medium text-foreground">Option 2:</span> Tap <span className="font-medium text-foreground">"Don't install app"</span> if you want to cancel.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
+                        {/* Step 4 */}
                         <div className="flex gap-4">
                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                                 4
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-foreground mb-2">Launch & Enjoy</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Once installed, open AskAI Chat from your app drawer and start chatting!
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-foreground mb-2">Wait for Scanning</h3>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                    Google Play Protect will scan the app. You'll see <span className="font-medium text-foreground">"Scanning..."</span> with a loading indicator.
+                                </p>
+                                <p className="text-xs text-muted-foreground italic">
+                                    This usually takes 10-30 seconds. Please be patient.
                                 </p>
                             </div>
                         </div>
+
+                        {/* Step 5 */}
+                        <div className="flex gap-4">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                                5
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-foreground mb-2">Review Important Notice & Install</h3>
+                                <p className="text-sm text-muted-foreground mb-3">
+                                    After scanning, you may see an <span className="font-medium text-foreground">"Important Notice"</span> dialog. This appears because the app was created using a free platform.
+                                </p>
+                                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-3">
+                                    <p className="text-xs text-foreground font-medium mb-2">The notice will mention:</p>
+                                    <ul className="space-y-1 text-xs text-muted-foreground ml-3">
+                                        <li>• Unverified Origin</li>
+                                        <li>• Potential Cyber Risks</li>
+                                        <li>• Liability Disclaimer</li>
+                                    </ul>
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                    Read the notice carefully, then tap <span className="font-medium text-green-600">"I UNDERSTAND"</span> to proceed.
+                                </p>
+                                <p className="text-xs text-amber-600 font-medium">
+                                    ⚠️ Only install if you trust this source and downloaded from the official AskAI Chat website.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Step 6 */}
+                        <div className="flex gap-4">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                                6
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-foreground mb-2">Final Installation</h3>
+                                <p className="text-sm text-muted-foreground mb-3">
+                                    After the scan completes successfully, you'll see <span className="font-medium text-green-600">"This app looks safe"</span> with a checkmark.
+                                </p>
+                                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-3">
+                                    <p className="text-sm text-foreground font-medium">
+                                        ✓ Tap the <span className="text-green-600">"Install"</span> button to complete the installation.
+                                    </p>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    Once installed, tap <span className="font-medium text-primary">"Open"</span> to launch AskAI Chat and start chatting with AI!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Pro Tip */}
+                    <div className="mt-6 bg-primary/5 border border-primary/20 rounded-lg p-4">
+                        <p className="text-sm font-medium text-foreground mb-1">💡 Pro Tip:</p>
+                        <p className="text-xs text-muted-foreground">
+                            If you encounter any issues during installation, make sure you've enabled "Install unknown apps" for your browser in Settings → Security → Install unknown apps.
+                        </p>
                     </div>
                 </div>
 
