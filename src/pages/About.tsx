@@ -1,10 +1,10 @@
 import PageLayout from '@/components/layout/PageLayout';
-import { Bot, Zap, Shield, Heart, MessageSquare, Database, Lock, Gamepad2, Users, Code, Server, Cpu, Globe, FileText, Image, Layers } from 'lucide-react';
+import { Bot, Zap, Shield, Heart, MessageSquare, Database, Lock, Gamepad2, Users, Code, Server, Cpu, Globe, FileText, Image, Layers, Sparkles } from 'lucide-react';
 
 const About = () => {
   const features = [
     {
-      icon: 'image', // Special marker for image-based icon
+      icon: Sparkles,
       title: 'AI-Powered Conversations',
       description: 'Powered by Google Gemini AI for intelligent, context-aware conversations that understand and respond naturally.',
     },
@@ -128,12 +128,8 @@ const About = () => {
                 key={feature.title}
                 className="p-5 rounded-xl bg-muted/30 border border-border hover:border-primary/30 transition-colors"
               >
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${feature.icon === 'image' ? '' : 'bg-primary/20'}`}>
-                  {feature.icon === 'image' ? (
-                    <img src="/favicon.png" alt="AskAI Logo" className="w-12 h-12 object-contain drop-shadow-lg" />
-                  ) : (
-                    <feature.icon className="w-6 h-6 text-primary" />
-                  )}
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-primary/20">
+                  <feature.icon className="w-6 h-6 text-primary" />
                 </div>
                 <h4 className="font-semibold text-foreground mb-2">{feature.title}</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
