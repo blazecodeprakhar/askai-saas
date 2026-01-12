@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, MessageSquare, Settings, Trash2, Sun, Moon, LogOut, LogIn, Search, PanelLeftClose, PanelLeft, Info, Database, Loader2, Calendar, TrendingUp, Clock, Pencil, Check, X } from 'lucide-react';
+import { Plus, MessageSquare, Settings, Trash2, Sun, Moon, LogOut, LogIn, Search, PanelLeftClose, PanelLeft, Info, Database, Loader2, Calendar, TrendingUp, Clock, Pencil, Check, X, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -546,6 +546,15 @@ const Sidebar = ({
                     >
                       <Info className="w-5 h-5" />
                       <span className="text-sm">About</span>
+                    </Link>
+
+                    <Link
+                      to="/download"
+                      onClick={() => setShowSettings(false)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+                    >
+                      <Smartphone className="w-5 h-5" />
+                      <span className="text-sm">Download AskAI for Phone</span>
                     </Link>
 
                     <div className="border-t border-border my-1" />
