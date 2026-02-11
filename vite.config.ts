@@ -11,14 +11,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    viteStaticCopy({
-      targets: [
-        {
-          src: '.htaccess',
-          dest: ''
-        }
-      ]
-    })
+
   ],
   resolve: {
     alias: {

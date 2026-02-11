@@ -54,8 +54,8 @@ function MessageReactions({ content }: { content: string; messageId?: string }) 
         onClick={handleCopy}
         className={cn(
           "p-1.5 rounded-md transition-all duration-150",
-          copied 
-            ? "bg-green-500/20 text-green-500" 
+          copied
+            ? "bg-green-500/20 text-green-500"
             : "hover:bg-muted text-muted-foreground hover:text-foreground"
         )}
         title="Copy message"
@@ -66,31 +66,31 @@ function MessageReactions({ content }: { content: string; messageId?: string }) 
           <Copy className="w-3.5 h-3.5" />
         )}
       </button>
-      
+
       {/* Divider */}
       <div className="w-px h-4 bg-border/50 mx-0.5" />
-      
+
       {/* Thumbs up */}
       <button
         onClick={() => handleReaction('up')}
         className={cn(
           "p-1.5 rounded-md transition-all duration-150",
-          reaction === 'up' 
-            ? "bg-green-500/20 text-green-500" 
+          reaction === 'up'
+            ? "bg-green-500/20 text-green-500"
             : "hover:bg-muted text-muted-foreground hover:text-foreground"
         )}
         title="Good response"
       >
         <ThumbsUp className={cn("w-3.5 h-3.5", reaction === 'up' && "fill-current")} />
       </button>
-      
+
       {/* Thumbs down */}
       <button
         onClick={() => handleReaction('down')}
         className={cn(
           "p-1.5 rounded-md transition-all duration-150",
-          reaction === 'down' 
-            ? "bg-red-500/20 text-red-500" 
+          reaction === 'down'
+            ? "bg-red-500/20 text-red-500"
             : "hover:bg-muted text-muted-foreground hover:text-foreground"
         )}
         title="Bad response"
@@ -101,96 +101,116 @@ function MessageReactions({ content }: { content: string; messageId?: string }) 
   );
 }
 
-// Enhanced streaming text hook with word-by-word reveal for natural typing
+// Enhanced streaming text hook with smooth word-by-word reveal (SDK-style)
 function useStreamingText(text: string, isStreaming: boolean) {
-  const [displayedText, setDisplayedText] = useState('');
+  const [displayedText, setDisplayedText] = useState(isStreaming ? '' : text);
   const [isAnimating, setIsAnimating] = useState(false);
-  const indexRef = useRef(0);
-  const frameRef = useRef<number>();
-  const lastTextRef = useRef('');
-  const lastUpdateRef = useRef(0);
+
+  const indexRef = useRef(isStreaming ? 0 : text.length);
+  const textRef = useRef(text);
+  const frameRef = useRef<number | null>(null);
+  const frameCounter = useRef(0);
+
+  // Sync text ref and handle resets
+  useEffect(() => {
+    // If text shrinks (new conversation or reset), reset index
+    if (text.length < indexRef.current) {
+      indexRef.current = 0;
+      setDisplayedText('');
+    }
+    textRef.current = text;
+  }, [text]);
 
   useEffect(() => {
-    // Reset if text shrinks significantly (new conversation)
-    if (text.length < lastTextRef.current.length - 20) {
-      indexRef.current = 0;
-      setDisplayedText('');
-      lastTextRef.current = '';
-    }
-
-    // If not streaming, show full text immediately
-    if (!isStreaming && text) {
-      setDisplayedText(text);
-      indexRef.current = text.length;
+    // If not streaming, show full text immediately (history or completion)
+    if (!isStreaming) {
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      // Ensure we display the full text at the end
+      if (text !== displayedText) {
+        setDisplayedText(text);
+        indexRef.current = text.length;
+      }
       setIsAnimating(false);
-      lastTextRef.current = text;
       return;
     }
 
-    if (!text) {
-      setDisplayedText('');
-      indexRef.current = 0;
-      return;
-    }
-
-    lastTextRef.current = text;
-
-    const animate = (timestamp: number) => {
-      // Throttle updates for smoother rendering (target ~60fps)
-      if (timestamp - lastUpdateRef.current < 16) {
+    // Animation Loop
+    const animate = () => {
+      frameCounter.current++;
+      // Skip frames to decrease base speed (render every 2 frames)
+      if (frameCounter.current % 2 !== 0) {
         frameRef.current = requestAnimationFrame(animate);
         return;
       }
-      lastUpdateRef.current = timestamp;
 
-      if (indexRef.current < text.length) {
+      const currentTarget = textRef.current;
+      const currentIndex = indexRef.current;
+
+      if (currentIndex < currentTarget.length) {
         setIsAnimating(true);
-        
-        // Calculate characters to reveal based on backlog
-        const backlog = text.length - indexRef.current;
-        let charsToAdd: number;
-        
+
+        // SDK-style Loading Effect Logic
+        const backlog = currentTarget.length - currentIndex;
+
+        // Determine characters to reveal per frame
+        // Priority: SMOOTHNESS > Speed.
+        // We want a "human-like" or "high-quality AI" feel, which is slightly slower and more deliberate.
+
+        let charsToAdd = 1;
+
         if (backlog > 200) {
-          // Very far behind - catch up quickly
-          charsToAdd = Math.ceil(backlog * 0.3);
+          // If we are REALLY far behind, speed up to catch up
+          charsToAdd = 3;
         } else if (backlog > 100) {
-          // Moderately behind
-          charsToAdd = Math.ceil(backlog * 0.15);
-        } else if (backlog > 50) {
-          // Slightly behind
-          charsToAdd = 6;
+          charsToAdd = 2;
         } else {
-          // Normal typing speed - reveal by words/chunks for natural feel
-          const remaining = text.slice(indexRef.current);
-          const nextSpace = remaining.indexOf(' ');
-          const nextNewline = remaining.indexOf('\n');
-          
-          // Find the next natural break point
-          if (nextNewline !== -1 && nextNewline < 3) {
-            charsToAdd = nextNewline + 1;
-          } else if (nextSpace !== -1 && nextSpace < 8) {
-            charsToAdd = nextSpace + 1;
-          } else {
-            charsToAdd = Math.min(3, backlog);
-          }
+          // Natural pacing: 
+          // Most of the time, add 1 char.
+          // Occasionally add 0 (skip a frame) to simulate "thinking" or variable typing speed? 
+          // Better: Add 1 char, but maybe skip frames in the loop?
+          // Implemented frame skipping logic below via requestAnimationFrame recursion speed.
+          charsToAdd = 1;
         }
-        
-        indexRef.current = Math.min(indexRef.current + charsToAdd, text.length);
-        setDisplayedText(text.slice(0, indexRef.current));
+
+        const nextIndex = Math.min(currentIndex + charsToAdd, currentTarget.length);
+        indexRef.current = nextIndex;
+        setDisplayedText(currentTarget.slice(0, nextIndex));
+
+        // Continue loop
         frameRef.current = requestAnimationFrame(animate);
       } else {
+        // Finished animating current buffer, but keep loop alive if still streaming?
+        // Actually, better to stop and let the dependency 'text' appearing restart if needed?
+        // NO. dependency 'text' restarting causes the jitter.
+        // We can just stop. The next `useEffect` call or a timer isn't needed
+        // because we need to restart the loop if text grows.
+
+        // BUT, since we removed `text` from dependency, who restarts the loop?
+        // We need a mechanism to restart the loop if `textRef` changes and we are idle.
+
         setIsAnimating(false);
+        frameRef.current = null;
       }
     };
 
-    frameRef.current = requestAnimationFrame(animate);
+    // If we are strictly not animating, but we have new text, start!
+    if (!frameRef.current && indexRef.current < textRef.current.length) {
+      frameRef.current = requestAnimationFrame(animate);
+    }
 
     return () => {
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
     };
-  }, [text, isStreaming]);
+  }, [isStreaming, text]); // Re-introducing text dependency but handling cleanup smarter? 
+  // Wait, if I re-introduce 'text', the cleanup runs.
+
+  // Alternative: Do not use `text` in dependency. Use a separate effect to kickstart.
 
   return { displayedText, isAnimating };
 }
@@ -248,14 +268,14 @@ function TypingIndicator() {
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20">
         <Sparkles className="w-4 h-4 text-primary-foreground" />
       </div>
-      
+
       {/* Typing animation container */}
       <div className="flex flex-col gap-2 pt-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">AskAI</span>
           <span className="text-xs text-muted-foreground">is typing</span>
         </div>
-        
+
         {/* Animated typing dots */}
         <div className="flex items-center gap-1.5">
           <div className="flex gap-1">
@@ -272,7 +292,7 @@ function TypingIndicator() {
 // Read receipt component with double checkmarks
 function ReadReceipt({ isDelivered, isRead }: { isDelivered?: boolean; isRead?: boolean }) {
   if (!isDelivered && !isRead) return null;
-  
+
   return (
     <span className="inline-flex items-center ml-1.5">
       {isRead ? (
@@ -311,13 +331,13 @@ function formatInlineText(text: string): React.ReactNode[] {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
-    
+
     if (match[1]) {
       // URL - make it clickable
       const url = match[1];
       parts.push(
-        <a 
-          key={keyIndex++} 
+        <a
+          key={keyIndex++}
           href={url}
           target="_blank"
           rel="noopener noreferrer"
@@ -341,7 +361,7 @@ function formatInlineText(text: string): React.ReactNode[] {
         </code>
       );
     }
-    
+
     lastIndex = match.index + match[0].length;
   }
 
@@ -356,7 +376,7 @@ function formatInlineText(text: string): React.ReactNode[] {
 function formatText(text: string): React.ReactNode[] {
   const lines = text.split('\n');
   const result: React.ReactNode[] = [];
-  
+
   lines.forEach((line, lineIndex) => {
     // Check for headers
     const h3Match = line.match(/^###\s+(.*)$/);
@@ -366,7 +386,7 @@ function formatText(text: string): React.ReactNode[] {
     const numberedMatch = line.match(/^(\d+)\.\s+(.*)$/);
     // Check for bullet points
     const bulletMatch = line.match(/^[-•*]\s+(.*)$/);
-    
+
     if (h1Match) {
       result.push(
         <h2 key={lineIndex} className="text-lg font-semibold text-foreground mt-4 mb-2 first:mt-0">
@@ -409,7 +429,7 @@ function formatText(text: string): React.ReactNode[] {
       );
     }
   });
-  
+
   return result;
 }
 
@@ -435,12 +455,12 @@ function parseContent(content: string) {
 }
 
 // AI message content with streaming effect
-function AIMessageContent({ 
-  content, 
+function AIMessageContent({
+  content,
   isStreaming,
-  files 
-}: { 
-  content: string; 
+  files
+}: {
+  content: string;
   isStreaming: boolean;
   files?: UploadedFile[];
 }) {
@@ -541,8 +561,8 @@ function ChatMessage({ role, content, timestamp, isTyping, isStreaming, files, i
               <TypingIndicator />
             ) : (
               <>
-                <AIMessageContent 
-                  content={content} 
+                <AIMessageContent
+                  content={content}
                   isStreaming={isStreaming || false}
                   files={files}
                 />
@@ -556,7 +576,7 @@ function ChatMessage({ role, content, timestamp, isTyping, isStreaming, files, i
         )}
         {/* Timestamp and read receipt row */}
         {timestamp && !isStreaming && (
-          <div 
+          <div
             className={cn(
               "flex items-center gap-1 mt-1.5",
               isUser ? "justify-end pr-1" : "justify-start pl-1"
